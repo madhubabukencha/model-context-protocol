@@ -5,7 +5,7 @@ Think of it like a USB port 🔌 for AI. Before USB, every device (printers, mic
 
 For example, if you want to pull latest pull requests information from GitHub, you might have to write you own `Tool`(e.g: git_pull_request) and it's definition. With MCP your tool and definition writing handled by MCP sever and this server communicate with the GitHub and sends you the response.
 
-![mcp_server_and_client](images\mcp_client_server.png)
+![mcp_server_and_client](images/mcp_client_server.png)
 source: Anthropic Academy
 
 ### Common Questions
