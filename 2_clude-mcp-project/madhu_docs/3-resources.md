@@ -105,6 +105,8 @@ When the resource's data changes, the server sends a **notification** (`notifica
 ### 2. List Changed Notification (`notifications/resources/list_changed`)
 If new files are added or deleted from the server, the server sends a list changed notification to let the client know it should refresh its catalog.
 
+### How to run MCP resources
+Either you can directly run your mcp server or you call it in the client files. Study the documentation of the functions in both mcp_server.py and mcp_client.py files to understand how they are connected.
 ---
 
 ## 🔄 How it Works Under the Hood

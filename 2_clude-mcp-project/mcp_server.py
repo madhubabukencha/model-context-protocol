@@ -68,11 +68,18 @@ def list_docs_ids() -> list[str]:
 
 @mcp.resource("docs://documents", mime_type="application/json")
 def list_docs() -> list[str]:
+    """
+    It list documents when user adds @ sign in the prompt.
+    """
     return list(docs.keys())
 
 
+# the id ({doc_id}) should match with function parameter name.
 @mcp.resource("docs://documents/{doc_id}", mime_type="text/plain")
 def fetch_doc(doc_id: str) -> str:
+    """
+    It fetch the contents of the document when user adds @ sign in the prompt.
+    """
     if doc_id not in docs:
         raise ValueError(f"Doc with id {doc_id} not found")
     return docs[doc_id]
