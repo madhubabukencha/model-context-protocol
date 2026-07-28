@@ -1,6 +1,8 @@
 # FastMCP provides a high-level API to quickly create MCP servers
 # by abstracting away the low-level protocol details and boilerplate.
-from mcp.server.fastmcp import FastMCP
+from mcp.types import TextContent
+from mcp.types import SamplingMessage
+from mcp.server.fastmcp import FastMCP, Context
 from pydantic import Field
 from mcp.server.fastmcp.prompts import base
 
@@ -105,6 +107,36 @@ def format_document(
     """
 
     return [base.UserMessage(prompt)]
+
+
+# This function is an example for Sampling concept in the MCP.
+@mcp.tool()
+async def summarize(text_to_summarize: str, ctx: Context):
+    prompt = f"""
+    Please summarize the following text
+
+    {text_to_summarize}
+    """
+
+    result = await ctx.session.create_message(
+        messages=[
+            SamplingMessage(
+                role="user",
+                content=TextContent(
+                    type="text",
+                    text=prompt
+                )
+            )
+        ],
+        max_tokens=4000,
+        system_prompt="Your are a helpful research assistant"
+    )
+
+    if result.content.type == "text":
+        return result.content.text
+    else:
+        raise ValueError("Sampling failed")
+        
 
 
 if __name__ == "__main__":

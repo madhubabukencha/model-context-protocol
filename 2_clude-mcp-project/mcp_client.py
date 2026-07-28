@@ -5,6 +5,8 @@ uv run mcp_client.py
 or through main.py also 
 uv run main.py
 """
+from mcp.types import CreateMessageRequestParams
+from mcp.shared.context import RequestContext
 from pydantic import validate_call_decorator
 import sys
 import asyncio
@@ -15,6 +17,8 @@ from mcp.client.stdio import stdio_client
 
 import json
 from pydantic import AnyUrl
+
+from core.claude import Claude
 
 
 class MCPClient:
@@ -60,7 +64,7 @@ class MCPClient:
         #   read/write streams, giving us methods like list_tools(), call_tool(), etc.
         #   Again registered with the exit stack for automatic cleanup.
         self._session = await self._exit_stack.enter_async_context(
-            ClientSession(_stdio, _write)
+            ClientSession(_stdio, _write, sampling_callback=self.sampling_callback)
         )
 
         # Step 5: Perform the MCP handshake (initialize request).
@@ -119,6 +123,38 @@ class MCPClient:
                 return json.loads(resource.text)
 
             return resource.text
+    
+    async def sampling_callback(
+        self, context: RequestContext, params: CreateMessageRequestParams
+    ) -> types.CreateMessageResult:
+        print("\n[MCP SAMPLING CALLBACK] Received sampling request from MCP server...")
+        import os
+        model_name = os.getenv("CLAUDE_MODEL", "claude-3-5-sonnet-20241022")
+        claude_service = Claude(model=model_name)
+
+        formatted_messages = []
+        for msg in params.messages:
+            content_text = (
+                msg.content.text if hasattr(msg.content, "text") else str(msg.content)
+            )
+            formatted_messages.append({"role": msg.role, "content": content_text})
+
+        response = claude_service.chat(
+            messages=formatted_messages,
+            system=params.systemPrompt,
+        )
+
+        response_text = claude_service.text_from_message(response)
+        print(f"[MCP SAMPLING CALLBACK] Completed sampling response using model '{model_name}'.")
+
+        return types.CreateMessageResult(
+            role="assistant",
+            content=types.TextContent(
+                type="text",
+                text=response_text,
+            ),
+            model=model_name,
+        )
 
     # Gracefully shuts down the connection by closing the exit stack and clearing the session.
     async def cleanup(self):
@@ -144,10 +180,14 @@ async def main():
         args=["run", "mcp_server.py"],
     ) as _client:
         tools = await _client.list_tools()
-        print(f"TOOLS : {tools}")
+        print(f"TOOLS : {[t.name for t in tools]}")
 
         result = await _client.list_prompts()
-        print(f"PROMPTS : {result}")
+        print(f"PROMPTS : {[p.name for p in result]}")
+
+        # Example: call summarize tool (triggers MCP Sampling back to client LLM)
+        # summary_result = await _client.call_tool("summarize", {"text_to_summarize": "Model Context Protocol simplifies agent capabilities."})
+        # print(f"SUMMARY RESULT: {summary_result}")
 
 
 if __name__ == "__main__":
