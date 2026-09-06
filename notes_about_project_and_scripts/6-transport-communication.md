@@ -1,8 +1,8 @@
 ## Transport and Communication
-In this section we will discuss the various ways in which messages are transported and communicated between the client and the server.
+In this section, we will discuss the various ways in which messages are transported and communicated between the client and the server.
 
 ### MCP Messages Formats
-- There are many types of messages, each designed to achieve perticular goal (list tools, call tools and get resource etc ..,)
+- There are many types of messages, each designed to achieve particular goal (list tools, call tools and get resource etc ..,)
 - Client and Server communicates using JSON-RPC 2.0 protocol.
 - Here is the example for call tool request and response
   - Call Tool Request
